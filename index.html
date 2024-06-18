@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to Firebase Hosting</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="/__/firebase/10.12.2/firebase-app-compat.js"></script>
+    <script defer src="/__/firebase/10.12.2/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6YZFSc82XVJR1aJ3boeUzNqvDqT7y9Bw&callback=initMap"></script>
+  </head>
+  <body>
+    <h1>Retrieve Longitude and Latitude from Firebase</h1>
+    <div id="location">
+        <p>Longitude: <span id="longitude">Loading...</span></p>
+        <p>Latitude: <span id="latitude">Loading...</span></p>
+    </div>
+    <div id='map' style="height: 400px;"></div>
+
+    <script>
+      // Initialize the map globally
+      let map;
+
+      // Function to initialize the Google Map
+      function initMap(latitude, longitude) {
+        // Check if latitude and longitude are valid numbers
+        
+        if (isNaN(latitude) || isNaN(longitude)) {
+          console.error('Invalid latitude or longitude');
+          return;
+        }
+        
+
+        // The location to center the map
+        const location = { lat: parseFloat(latitude), lng: parseFloat(longitude) };
+
+        // Create a map object and specify the DOM element for display
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: location,
+          zoom: 12
+        });
+
+        // Add a marker at the specified location
+        const marker = new google.maps.marker({
+          position: location,
+          map: map,
+          title: 'Marker Title'
+        });
+      }
+
+      // Load the initMap function when the API is loaded
+      function loadMap() {
+        firebase.database().ref('GPS/longitude').on('value', snapshot => { 
+          const longitude = snapshot.val();
+          document.getElementById('longitude').innerText = longitude;
+          console.log('Longitude:', longitude);
+
+          firebase.database().ref('GPS/latitude').once('value', snapshot => {
+            const latitude = snapshot.val();
+            document.getElementById('latitude').innerText = latitude;
+            console.log('Latitude:', latitude);
+
+            // Call initMap only when both latitude and longitude are available
+            if (latitude !== null && longitude !== null) {
+              initMap(latitude, longitude);
+            }
+          });
+        });
+      }
+
+      // Initialize the map after DOM content is loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        loadMap();
+      });
+    </script>
+  </body>
+</html>
